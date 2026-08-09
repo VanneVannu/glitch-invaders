@@ -403,17 +403,23 @@ function activarVictoriaSistema() {
     setTimeout(() => sonarTonoRetro(900, 0.2, 'sine'), 120);
 }
 
-// ==========================================
-// 5. SECCIÓN B: DETECCIÓN DE IMPACTOS, BEERS Y CICLO CRT
-// ==========================================
+// ===================================================
+// 5. SECCIÓN B: DETECCIÓN DE IMPACTOS, BEEPERS Y CICLO CRT
+// ===================================================
 
 // Escanea intersecciones geométricas entre tus bits binarios y las naves corruptas
 function procesarColisionesGeometricas() {
     if (!partidaEnCurso || gameOver || victoria) return;
 
     // COLISIÓN 1: Tus ráfagas antivirus (Bits) impactan contra los Bugs Invasores
+    // Recorremos el bucle de atrás hacia adelante para evitar saltos de índice al borrar
     for (let i = proyectilesAntivirus.length - 1; i >= 0; i--) {
         const p = proyectilesAntivirus[i];
+        
+        // REPARADO: Candado de seguridad. Si el proyectil fue borrado en este ciclo, lo saltamos
+        if (!p) continue;
+
+        let proyectilBorrado = false;
 
         for (let j = 0; j < enemigos.length; j++) {
             const bug = enemigos[j];
@@ -425,6 +431,7 @@ function procesarColisionesGeometricas() {
                 
                 bug.vivo = false; // Desinfectamos el bug
                 proyectilesAntivirus.splice(i, 1); // Eliminamos el bit binario del aire
+                proyectilBorrado = true;
                 
                 // Sumamos los datos recuperados a tu casillero neón
                 puntuacionBugs += bug.puntos;
@@ -436,20 +443,24 @@ function procesarColisionesGeometricas() {
                 // Sonido agudo de explosión cibernética mini
                 sonarTonoRetro(500, 0.05, 'square');
                 
-                // GESTIÓN DE HIGH SCORE RECORRENTE: Si superas tu récord, se clava en el disco duro
+                // GESTIÓN DE HIGH SCORE RECURRENTE: Si superas tu récord, se clava en el disco duro
                 if (puntuacionBugs > highScoreGabinete) {
                     highScoreGabinete = puntuacionBugs;
                     localStorage.setItem('invaders_high_score', highScoreGabinete);
                     document.getElementById('txt-high-score').innerText = highScoreGabinete.toString().padStart(5, '0');
                 }
-                break; // Rompemos el ciclo interno para este proyectil procesado
+                break; // Rompemos el ciclo de bugs para este proyectil desinfectado
             }
         }
+        
+        // REPARADO: Si el proyectil ya impactó y fue borrado, forzamos la ruptura del ciclo del proyectil
+        if (proyectilBorrado) continue;
     }
 
     // COLISIÓN 2: Los disparos de glitch enemigo (!) impactan contra tu Terminal Hacker
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
+        if (!p) continue; // Candado de resguardo para disparos enemigos
 
         if (p.x >= jugadorTerminal.x && p.x <= jugadorTerminal.x + jugadorTerminal.ancho &&
             p.y >= jugadorTerminal.y && p.y <= jugadorTerminal.y + jugadorTerminal.alto) {
@@ -494,4 +505,3 @@ function buclePrincipalJuego() {
 inicializarEjercitoBugs();
 dibujar(); // Pinta el escenario inicial en standby
 requestAnimationFrame(buclePrincipalJuego);
-
