@@ -162,3 +162,23 @@ body {
   color: #000;
   box-shadow: 0 0 12px #ff7700;
 }
+
+/* ESTILOS DE LOS BOTONES SUPERIORES ARCADE */
+.btn-mando-arcade {
+  background: #09141c;
+  border: 2px solid #ff7700;
+  color: #ff7700;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.btn-mando-arcade:hover {
+  background: #ff7700;
+  color: #000;
+  box-shadow: 0 0 15px #ff7700;
+}
