@@ -63,6 +63,24 @@ document.getElementById('txt-high-score').innerText = highScoreGabinete.toString
 // 2. ENGRANAJE DE INICIALIZACIÓN DE MATRICES
 // ==========================================
 
+// REPARADO: Agregamos la función que despierta el movimiento de los marcianitos al pulsar START
+function iniciarPartidaFisica_Invaders() {
+    if (partidaEnCurso || gameOver || victoria) return;
+    partidaEnCurso = true;
+    
+    // Cambiamos cosméticamente el botón para indicar que el kernel está inyectándose
+    const btnStart = document.getElementById('btn-start-invaders');
+    if (btnStart) {
+        btnStart.innerText = "✔ KERNEL_RUNNING";
+        btnStart.style.borderColor = "rgba(255, 119, 0, 0.4)";
+        btnStart.style.color = "rgba(255, 119, 0, 0.4)";
+    }
+    
+    inyectarLogConsola("[KERNEL]: Execution sequence triggered. Antivirus payloads armed.");
+    sonarTonoRetro(500, 0.15, 'square');
+}
+
+
 // Despliega el escuadrón de naves corruptas en el ciberespacio por renglones y columnas
 function inicializarEjercitoBugs() {
     enemigos.length = 0; // Limpiamos la matriz por si es un reinicio
@@ -141,9 +159,9 @@ function inyectarRáfagaAntivirus() {
     sonarTonoRetro(900, 0.06, 'triangle');
 }
 
-// Restablece todas las variables locales para iniciar una nueva desinfección
+// REPARADO: El reset de partida ahora restaura también el estado visual de los botones del menú superior
 function reiniciarPartidaCompleta() {
-    partidaEnCurso = true;
+    partidaEnCurso = false; // Espera a que vuelvas a pulsar START MATCH
     gameOver = false;
     victoria = false;
     puntuacionBugs = 0;
@@ -155,12 +173,22 @@ function reiniciarPartidaCompleta() {
     proyectilesAntivirus.length = 0;
     proyectilesGlitch.length = 0;
 
-    // Actualizamos los marcadores neón de la marquesina
+    // Restauramos los marcadores neón de la marquesina superior
     document.getElementById('txt-score-bugs').innerText = "0000";
     document.getElementById('txt-integrity').innerText = "100%";
 
+    // Restauramos el botón de START MATCH a su verde de encendido inicial
+    const btnStart = document.getElementById('btn-start-invaders');
+    if (btnStart) {
+        btnStart.innerText = "⚡ START MATCH";
+        btnStart.style.borderColor = "#ff7700";
+        btnStart.style.color = "#ff7700";
+    }
+
     inicializarEjercitoBugs();
-    sonarTonoRetro(300, 0.2, 'square'); // Pitido de arranque
+    dibujar(); // Pinta el ejército listo en congelamiento esperando el inicio
+    sonarTonoRetro(300, 0.2, 'square'); 
+    inyectarLogConsola("[SYSTEM]: Core re-initialized. Memory buffers cleared.");
 }
 
 // ==========================================
@@ -466,3 +494,4 @@ function buclePrincipalJuego() {
 inicializarEjercitoBugs();
 dibujar(); // Pinta el escenario inicial en standby
 requestAnimationFrame(buclePrincipalJuego);
+
