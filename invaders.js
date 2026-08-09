@@ -286,9 +286,10 @@ function mostrarPantallaStatusGabinete(titulo, subtitulo, colorResaltado = '#ffc
 // 4. MOTOR FÍSICO Y ACTUALIZADOR DE MOVIMIENTOS
 // ==========================================
 function actualizar() {
+    // CANDADO DE SEGURIDAD INDUSTRIAL: Detiene por completo las físicas si el juego acabó
     if (!partidaEnCurso || gameOver || victoria) return;
 
-    // 1. CONTROL LATERAL JUGADOR (Mueve tu terminal de código)
+    // 1. CONTROL LATERAL JUGADOR
     if (teclas['a'] || teclas['A'] || teclas['ArrowLeft']) {
         jugadorTerminal.x = Math.max(10, jugadorTerminal.x - jugadorTerminal.velocidad);
     }
@@ -301,27 +302,21 @@ function actualizar() {
         inyectarRáfagaAntivirus();
     }
 
-    // 2. DESPLAZAMIENTO FLUIDO DE TUS BITS BINARIOS hacia el techo de la memoria
+    // 2. DESPLAZAMIENTO FLUIDO DE TUS BITS BINARIOS
     for (let i = proyectilesAntivirus.length - 1; i >= 0; i--) {
         const p = proyectilesAntivirus[i];
         p.y -= velocidadProyectil;
-        p.x += p.desvioX; // Desvío sutil para darle el efecto flotante
-
-        // Limpieza de memoria: si el bit sale del canvas, lo eliminamos
-        if (p.y < 0) {
-            proyectilesAntivirus.splice(i, 1);
-        }
+        p.x += p.desvioX;
+        if (p.y < 0) proyectilesAntivirus.splice(i, 1);
     }
 
-    // 3. DESPLAZAMIENTO FLUIDO DE LOS DISPAROS ENEMIGOS (GLITCH) hacia el piso
+    // 3. DESPLAZAMIENTO FLUIDO DE LOS DISPAROS ENEMIGOS (GLITCH)
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
         p.y += velocidadGlitchProyectil;
-
-        // Limpieza de memoria: si el virus toca el fondo, daña la integridad del sistema
         if (p.y > canvas.height) {
             proyectilesGlitch.splice(i, 1);
-            modificarIntegridadMemoria(-5); // Resta 5% de vida si dejas pasar virus
+            modificarIntegridadMemoria(-5); 
         }
     }
 
@@ -332,28 +327,23 @@ function actualizar() {
     enemigos.forEach(bug => {
         if (bug.vivo) {
             totalBugsVivos++;
-            // Desplazamiento horizontal sincronizado
             bug.x += enemigosVelocidadX * enemigosDireccionX;
 
-            // Verificamos si algún bug toca los límites laterales de la pantalla
             if (bug.x <= 10 || bug.x + bug.ancho >= canvas.width - 10) {
                 tocarBordeLateral = true;
             }
 
-            // CONDICIÓN INFECCIÓN TOTAL: Si los marcianitos tocan tu terminal, es Game Over de inmediato
             if (bug.y + bug.alto >= jugadorTerminal.y) {
                 forzarFinPartidaInfeccion();
             }
         }
     });
 
-    // CONDICIÓN VICTORIA ARCADE: Si exterminaste la oleada de naves
     if (totalBugsVivos === 0) {
         activarVictoriaSistema();
         return;
     }
 
-    // Si algún bug tocó una pared, todo el bloque baja un renglón e invierte su dirección
     if (tocarBordeLateral) {
         enemigosDireccionX *= -1;
         enemigos.forEach(bug => {
@@ -361,7 +351,7 @@ function actualizar() {
         });
     }
 
-    // 5. INTELIGENCIA DE BUGS: Disparos aleatorios desde el techo
+    // 5. INTELIGENCIA DE BUGS: Disparos aleatorios
     enemigos.forEach(bug => {
         if (bug.vivo && Math.random() < cadenciaFuegoEnemigo) {
             proyectilesGlitch.push({
@@ -371,6 +361,7 @@ function actualizar() {
         }
     });
 }
+
 
 // Sub-funciones auxiliares para la integridad de tu núcleo
 function modificarIntegridadMemoria(valor) {
@@ -409,14 +400,11 @@ function activarVictoriaSistema() {
 
 // Escanea intersecciones geométricas entre tus bits binarios y las naves corruptas
 function procesarColisionesGeometricas() {
+    // CANDADO DE SEGURIDAD INDUSTRIAL: Evita cálculos sobre matrices vacías tras el Game Over
     if (!partidaEnCurso || gameOver || victoria) return;
 
-    // COLISIÓN 1: Tus ráfagas antivirus (Bits) impactan contra los Bugs Invasores
-    // Recorremos el bucle de atrás hacia adelante para evitar saltos de índice al borrar
     for (let i = proyectilesAntivirus.length - 1; i >= 0; i--) {
         const p = proyectilesAntivirus[i];
-        
-        // REPARADO: Candado de seguridad. Si el proyectil fue borrado en este ciclo, lo saltamos
         if (!p) continue;
 
         let proyectilBorrado = false;
@@ -424,53 +412,42 @@ function procesarColisionesGeometricas() {
         for (let j = 0; j < enemigos.length; j++) {
             const bug = enemigos[j];
 
-            // Si el bug está vivo y el bit binario entra en sus coordenadas X/Y
-            if (bug.vivo && 
-                p.x >= bug.x && p.x <= bug.x + bug.ancho && 
-                p.y >= bug.y && p.y <= bug.y + bug.alto) {
-                
-                bug.vivo = false; // Desinfectamos el bug
-                proyectilesAntivirus.splice(i, 1); // Eliminamos el bit binario del aire
+            if (bug.vivo && p.x >= bug.x && p.x <= bug.x + bug.ancho && p.y >= bug.y && p.y <= bug.y + bug.alto) {
+                bug.vivo = false;
+                proyectilesAntivirus.splice(i, 1);
                 proyectilBorrado = true;
                 
-                // Sumamos los datos recuperados a tu casillero neón
                 puntuacionBugs += bug.puntos;
                 document.getElementById('txt-score-bugs').innerText = puntuacionBugs.toString().padStart(4, '0');
-                
-                // Registro estético en la consola inferior
                 inyectarLogConsola(`[DELETED]: Bug ${bug.icono} purged. Recalculating memory sectors (+${bug.puntos} bytes).`);
                 
-                // Sonido agudo de explosión cibernética mini
                 sonarTonoRetro(500, 0.05, 'square');
                 
-                // GESTIÓN DE HIGH SCORE RECURRENTE: Si superas tu récord, se clava en el disco duro
                 if (puntuacionBugs > highScoreGabinete) {
                     highScoreGabinete = puntuacionBugs;
                     localStorage.setItem('invaders_high_score', highScoreGabinete);
                     document.getElementById('txt-high-score').innerText = highScoreGabinete.toString().padStart(5, '0');
                 }
-                break; // Rompemos el ciclo de bugs para este proyectil desinfectado
+                break;
             }
         }
-        
-        // REPARADO: Si el proyectil ya impactó y fue borrado, forzamos la ruptura del ciclo del proyectil
         if (proyectilBorrado) continue;
     }
 
-    // COLISIÓN 2: Los disparos de glitch enemigo (!) impactan contra tu Terminal Hacker
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
-        if (!p) continue; // Candado de resguardo para disparos enemigos
+        if (!p) continue;
 
         if (p.x >= jugadorTerminal.x && p.x <= jugadorTerminal.x + jugadorTerminal.ancho &&
             p.y >= jugadorTerminal.y && p.y <= jugadorTerminal.y + jugadorTerminal.alto) {
             
-            proyectilesGlitch.splice(i, 1); // Removemos el proyectil de virus
-            modificarIntegridadMemoria(-15); // Los impactos directos dañan un 15% tu núcleo
+            proyectilesGlitch.splice(i, 1);
+            modificarIntegridadMemoria(-15);
             inyectarLogConsola("[WARNING]: Core impacted by external code injection. Shield integrity dropping.");
         }
     }
 }
+
 
 // OSCILADOR SYNTH RETRO DE 8 BITS EXCLUSIVO (Web Audio API)
 function sonarTonoRetro(frecuencia, duracion, tipoOnda = 'sine') {
@@ -493,13 +470,20 @@ function sonarTonoRetro(frecuencia, duracion, tipoOnda = 'sine') {
     }
 }
 
-// BUCLE DE FOTOGRAMAS INFINITO (60 FPS CONSTANTES CON AUTORIDAD LOCAL)
+
+// BUCLE DE FOTOGRAMAS INFINITO (60 FPS CONSTANTES CON SISTEMA DE CONGELAMIENTO SEGURO)
 function buclePrincipalJuego() {
-    actualizar();
-    procesarColisionesGeometricas();
+    // Si la partida no está activa (Standby, Game Over o Victoria), congelamos las físicas 
+    // pero seguimos llamando a dibujar() para pintar las pantallas de alerta neón
+    if (partidaEnCurso && !gameOver && !victoria) {
+        actualizar();
+        procesarColisionesGeometricas();
+    }
+    
     dibujar();
     requestAnimationFrame(buclePrincipalJuego);
 }
+
 
 // AUTO-RUN DE CARGA: Desplegamos la pantalla base lista para cuando pulses START MATCH en el HTML
 inicializarEjercitoBugs();
