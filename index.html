@@ -8,10 +8,10 @@
 </head>
 <body>
 
-  <!-- Botón imperativo de eyección para regresar al menú principal del gabinete -->
-  <a href="index.html" class="btn-abortar-mision">🕹️ ABORT MISSION // RETURN</a>
+  <!-- REPARADO: El botón ahora apunta por internet real hacia la URL oficial de tu plataforma Synth Joy Station -->
+  <a href="https://onrender.com" class="btn-abortar-mision">🕹️ ABORT MISSION // RETURN</a>
 
-  <!-- Líneas de escaneo CRT para la atmósfera de monitor de tubo de fósforo -->
+  <!-- Líneas de escaneo CRT para la atmósfera de monitor de tubo -->
   <div class="efecto-crt-lineas"></div>
 
   <div id="contenedor-invaders-arcade">
@@ -33,6 +33,12 @@
         </div>
       </div>
     </header>
+
+    <!-- INTEGRADO: PANEL INTERACTIVO DE CONTROL DE PARTIDA -->
+    <div class="controles-partida-invaders" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 5px;">
+      <button id="btn-start-invaders" class="btn-mando-arcade" onclick="iniciarPartidaFisica_Invaders()">⚡ START MATCH</button>
+      <button id="btn-reset-invaders" class="btn-mando-arcade" onclick="reiniciarPartidaCompleta()">🔄 RESET CORE</button>
+    </div>
 
     <!-- AREA DEL LIENZO VECTORIAL -->
     <main id="arena-cyber-espacio">
