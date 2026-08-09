@@ -1,0 +1,164 @@
+@import url('https://googleapis.com');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+body {
+  /* Fondo petróleo ultra oscuro para mantener el contraste arcade */
+  background-color: #060c12; 
+  color: #ff7700; /* Naranja Neón Base */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* EFECTO CRT PANTALLA RETRO ÁMBAR */
+.efecto-crt-lineas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Reajustamos las líneas de barrido con un tinte ámbar/naranja sutil */
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 119, 0, 0.03), rgba(0, 242, 254, 0.01), rgba(255, 187, 0, 0.02));
+  background-size: 100% 4px, 6px 100%;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* CONTENEDOR ARCADE */
+#contenedor-invaders-arcade {
+  width: 95%;
+  max-width: 900px;
+  /* Fondo Petróleo Oscurecido con un tinte profundo */
+  background: #09141c; 
+  border: 3px solid #ff7700; /* Borde Naranja Industrial */
+  border-radius: 8px;
+  box-shadow: 0 0 25px rgba(255, 119, 0, 0.3), inset 0 0 20px rgba(0, 242, 254, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* CABECERA DEL MARCADOR */
+#cabecera-invaders {
+  border-bottom: 2px dashed rgba(255, 119, 0, 0.4);
+  padding-bottom: 10px;
+}
+
+.datos-sistema {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #00f2fe; /* Azul Cian / Petróleo Eléctrico para contrastar */
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.pantalla-puntuacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bloque-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.etiqueta-neon {
+  font-size: 0.9rem;
+  color: rgba(255, 119, 0, 0.7);
+  letter-spacing: 1px;
+}
+
+.valor-neon {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #ffaa00; /* Ámbar brillante */
+  text-shadow: 0 0 8px rgba(255, 119, 0, 0.6);
+}
+
+/* ÁREA DEL CANVAS */
+#arena-cyber-espacio {
+  display: flex;
+  justify-content: center;
+  background: #040a12; /* Abismo petróleo puro */
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  border-radius: 4px;
+}
+
+#lienzo-invaders {
+  /* Fondo interno del juego: Petróleo de alta densidad */
+  background: #02070f; 
+  display: block;
+}
+
+/* CONSOLA DE LOGS INFERIOR */
+#consola-logs-hack {
+  background: #040910;
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.terminal-header {
+  font-size: 0.75rem;
+  color: #00f2fe; /* Encabezado Petróleo Eléctrico */
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+  padding-bottom: 3px;
+}
+
+#caja-logs-sistema {
+  height: 50px;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.log-linea {
+  font-family: monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.system-green {
+  color: rgba(255, 119, 0, 0.6); /* Líneas de comandos ámbar */
+}
+
+/* BOTÓN ABORTAR MISIÓN */
+.btn-abortar-mision {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: #09141c;
+  border: 1px solid #ff7700;
+  color: #ff7700;
+  padding: 6px 12px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.btn-abortar-mision:hover {
+  background: #ff7700;
+  color: #000;
+  box-shadow: 0 0 12px #ff7700;
+}
