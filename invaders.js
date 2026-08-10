@@ -286,13 +286,17 @@ function dibujar() {
 
     // 5. PANTALLAS DE INTERFAZ INTEGRALES (ALERTA DE STATUS FINALES)
     if (!partidaEnCurso && !gameOver && !victoria) {
+        ctx.fillStyle = 'rgba(0, 242, 254, 0.3)'; // Tinte cian petróleo suave
+        ctx.font = 'bold 13px "Share Tech Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`SYSTEM_SECTOR: W-${oleadaActual.toString().padStart(2, '0')}`, 15, 25);
         // Pantalla de espera en el menú inicial
         mostrarPantallaStatusGabinete("KERNEL_STANDBY", "PRESS 'START MATCH' ON APEX PANEL TO DEPLOY KERNEL.");
     } else if (gameOver) {
         // Alerta roja de memoria colapsada
         mostrarPantallaStatusGabinete("CRITICAL_ERROR: SYSTEM_COLLAPSED", "MEMORY OVERFLOW. INFECTION RATIO 100%. PRESS RESET.", '#ff0055');
     } else if (victoria) {
-        // Alerta de éxito de desinfección total
+        // Alerta de éxito absoluto de desinfección total de la memoria central
         mostrarPantallaStatusGabinete("SYSTEM_SECURED // 100%", "ALL MALICIOUS TRANSACTIONS PURGED SUCCESSFULLY.", '#00ff66');
     }
 }
@@ -435,16 +439,41 @@ function forzarFinPartidaInfeccion() {
     dibujar();
 }
 
-
+// REPARADO: El juego ya no se corta al ganar; avanza de nivel aumentando la velocidad y agresividad
 function activarVictoriaSistema() {
-    partidaEnCurso = false;
-    victoria = true;
+    partidaEnCurso = false; // Pausamos temporalmente las físicas durante la transición de nivel
+    
+    // Limpiamos los buffers de proyectiles en el aire para iniciar el siguiente sector limpios
     proyectilesAntivirus.length = 0;
     proyectilesGlitch.length = 0;
-    inyectarLogConsola("[SUCCESS]: KERNEL CLEANSED. Segment 04 memory sectors re-secured.");
-    sonarTonoRetro(600, 0.15, 'sine');
-    setTimeout(() => sonarTonoRetro(900, 0.2, 'sine'), 120);
+    
+    // PASO A: Incrementamos el contador de oleadas globales
+    oleadaActual++;
+    
+    inyectarLogConsola(`[SUCCESS]: WECTOR SECTOR CLEARED. Loading Wave ${oleadaActual.toString().padStart(2, '0')}...`);
+    sonarTonoRetro(600, 0.1, 'sine');
+    setTimeout(() => sonarTonoRetro(900, 0.15, 'sine'), 80);
+
+    // PASO B: Escalado matemático de dificultad industrial
+    // Aumentamos la velocidad horizontal de las naves en bloque por cada nivel superado
+    enemigosVelocidadX = 1.5 + (oleadaActual * 0.4);
+    
+    // PASO C: Los enemigos se vuelven más hostiles incrementando su cadencia de fuego
+    cadenciaFuegoEnemigo = 0.008 + (oleadaActual * 0.002);
+    
+    // Restablecemos la dirección inicial de la grilla hacia la derecha
+    enemigosDireccionX = 1;
+
+    // Pequeño retardo de 1.2 segundos para que el jugador respire antes de la siguiente oleada
+    setTimeout(() => {
+        if (gameOver) return; // Candado de resguardo por si el jugador abortó
+        
+        inicializarEjercitoBugs(); // Re-generamos los 36 bugs en el techo
+        partidaEnCurso = true;     // Reactivamos el motor físico instantáneamente
+        inyectarLogConsola(`[SYSTEM]: Wave ${oleadaActual.toString().padStart(2, '0')} INITIALIZED. Grid velocity expanded to ${enemigosVelocidadX.toFixed(1)}x.`);
+    }, 1200);
 }
+
 
 // ===================================================
 // 5. SECCIÓN B: DETECCIÓN DE IMPACTOS, BEEPERS Y CICLO CRT
