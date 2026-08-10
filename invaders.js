@@ -163,26 +163,27 @@ function inyectarRáfagaAntivirus() {
     sonarTonoRetro(900, 0.06, 'triangle');
 }
 
-// REPARADO: El reset de partida ahora limpia el escenario de forma segura sin duplicar bucles
+// REPARADO: El reset de partida ahora restaura el motor gráfico de forma segura sin acumular bucles
 function reiniciarPartidaCompleta() {
-    partidaEnCurso = false; // Se queda en espera congelada hasta que pulses START MATCH
+    // 1. Apagamos de raíz cualquier estado de fin de partida previo
+    partidaEnCurso = false; 
     gameOver = false;
     victoria = false;
     puntuacionBugs = 0;
     integridadMemoria = 100;
     oleadaActual = 1;
     enemigosVelocidadX = 1.5;
-    enemigosDireccionX = 1; // Restablecemos la dirección a la derecha
+    enemigosDireccionX = 1;
 
-    // Vaciamos de forma segura las matrices de proyectiles para liberar memoria
+    // Vaciamos por completo los buffers de los proyectiles viejos
     proyectilesAntivirus.length = 0;
     proyectilesGlitch.length = 0;
 
-    // Restauramos los marcadores neón de la marquesina superior
+    // Restauramos las etiquetas de la marquesina superior
     document.getElementById('txt-score-bugs').innerText = "0000";
     document.getElementById('txt-integrity').innerText = "100%";
 
-    // Restauramos el botón de START MATCH a su naranja de encendido inicial
+    // Encendemos el botón de START MATCH en naranja brillante original
     const btnStart = document.getElementById('btn-start-invaders');
     if (btnStart) {
         btnStart.innerText = "⚡ START MATCH";
@@ -190,9 +191,14 @@ function reiniciarPartidaCompleta() {
         btnStart.style.color = "#ff7700";
     }
 
+    // 2. Volvemos a mapear la grilla de naves enemigas en el techo
     inicializarEjercitoBugs();
-    inyectarLogConsola("[SYSTEM]: Core re-initialized. Memory buffers and loop instances cleared.");
+    inyectarLogConsola("[SYSTEM]: Core re-initialized. Memory buffers cleared. Engine ready.");
     sonarTonoRetro(300, 0.2, 'square'); 
+
+    // 3. RE-ENCENDIDO DEL MOTOR: Como el bucle se apagó al perder, lo reactivamos limpiamente desde 0
+    dibujar(); // Pinta el ejército listo en congelamiento esperando el saque
+    buclePrincipalJuego(); 
 }
 
 
@@ -522,18 +528,26 @@ function sonarTonoRetro(frecuencia, duracion, tipoOnda = 'sine') {
 }
 
 
-// BUCLE DE FOTOGRAMAS INFINITO (60 FPS CONSTANTES CON SISTEMA DE CONGELAMIENTO SEGURO)
+// BUCLE DE FOTOGRAMAS INFINITO (60 FPS CONSTANTES CON FRENO DE EMERGENCIA REJUGABLE)
 function buclePrincipalJuego() {
-    // Si la partida está activa corremos físicas y colisiones, si no, solo dibujamos las alertas
-    if (partidaEnCurso && !gameOver && !victoria) {
+    // CANDADO DE ESTABILIDAD: Si ocurre un Game Over o una Victoria, cortamos el procesamiento físico
+    // de raíz para liberar la memoria del navegador y dejar los botones interactivos al 100%
+    if (gameOver || victoria) {
+        dibujar(); // Pintamos el último fotograma estático con la alerta neón correspondiente
+        return;    // FRENO DE EMERGENCIA: Detiene el requestAnimationFrame por completo
+    }
+
+    // Si la partida está activa, corremos las rutinas físicas y de colisiones normales
+    if (partidaEnCurso) {
         actualizar();
         procesarColisionesGeometricas();
     }
     
     dibujar();
-    // CANDADO CLAVE: El bucle se llama a sí mismo de forma infinita y solitaria una sola vez
+    // El motor solo se llama a sí mismo si la partida sigue en curso de forma saludable
     requestAnimationFrame(buclePrincipalJuego);
 }
+
 
 // AUTO-RUN DE ARRANQUE INMUTABLE (SÓLO SE EJECUTA AL CARGAR LA PÁGINA)
 inicializarEjercitoBugs();
