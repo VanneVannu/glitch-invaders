@@ -341,18 +341,20 @@ function actualizar() {
         if (p.y < 0) proyectilesAntivirus.splice(i, 1);
     }
 
-    // 3. DESPLAZAMIENTO FLUIDO DE LOS DISPAROS ENEMIGOS (GLITCH)
+    // 3. DESPLAZAMIENTO FLUIDO DE LOS DISPAROS ENEMIGOS (GLITCH) hacia el piso
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
         p.y += velocidadGlitchProyectil;
-        // Limpieza de memoria: si el virus toca el fondo, daña la integridad del sistema
+
+        // Limpieza de memoria: si el virus toca el fondo, se remueve de forma segura
         if (p.y > canvas.height) {
             proyectilesGlitch.splice(i, 1);
-            // REPARADO: Dejar pasar un disparo al suelo ahora solo quita 1% en lugar de 5%
-            modificarIntegridadMemoria(-1); 
+            
+            // REPARADO: Se elimina por completo la penalización de modificarIntegridadMemoria(-1)
+            // ¡El suelo ahora absorbe el impacto de forma segura! 0% de daño al sistema.
         }
-
     }
+
 
     // 4. MOTOR DE AVANCE DEL EJÉRCITO DE BUGS INFECTADOS
     let tocarBordeLateral = false;
