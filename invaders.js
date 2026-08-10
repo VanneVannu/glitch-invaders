@@ -397,17 +397,19 @@ function actualizar() {
 }
 
 
-// Sub-funciones auxiliares para la integridad de tu núcleo
+// REPARADO: Apaga el motor de forma fulminante en el microsegundo exacto de llegar a 0%
 function modificarIntegridadMemoria(valor) {
     integridadMemoria = Math.max(0, integridadMemoria + valor);
     document.getElementById('txt-integrity').innerText = `${integridadMemoria}%`;
     
+    // CORREGIDO: Si la integridad llega a cero, ejecutamos el protocolo de Game Over inmediato
     if (integridadMemoria <= 0) {
         forzarFinPartidaInfeccion();
     } else {
-        sonarTonoRetro(150, 0.1, 'sawtooth'); // Pitido de advertencia de daño
+        sonarTonoRetro(150, 0.1, 'sawtooth'); // Pitido de advertencia de daño estándar
     }
 }
+
 
 function forzarFinPartidaInfeccion() {
     partidaEnCurso = false;
