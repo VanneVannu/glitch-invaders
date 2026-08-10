@@ -397,28 +397,42 @@ function actualizar() {
 }
 
 
-// REPARADO: Apaga el motor de forma fulminante en el microsegundo exacto de llegar a 0%
+// REPARADO: Candado atómico. Apaga las físicas al instante y dibuja el cartel de fin de memoria
 function modificarIntegridadMemoria(valor) {
-    integridadMemoria = Math.max(0, integridadMemoria + valor);
+    // Si el juego ya se acabó por un Game Over previo, ignoramos cualquier cálculo extra
+    if (gameOver || victoria || !partidaEnCurso) return;
+
+    integridadMemoria = integridadMemoria + valor;
+    
+    // Forzamos el límite visual para que nunca muestre números negativos raros
+    if (integridadMemoria < 0) integridadMemoria = 0;
+    
     document.getElementById('txt-integrity').innerText = `${integridadMemoria}%`;
     
-    // CORREGIDO: Si la integridad llega a cero, ejecutamos el protocolo de Game Over inmediato
+    // INTERRUPTOR DE SEGURIDAD MÁXIMA
     if (integridadMemoria <= 0) {
         forzarFinPartidaInfeccion();
     } else {
-        sonarTonoRetro(150, 0.1, 'sawtooth'); // Pitido de advertencia de daño estándar
+        sonarTonoRetro(150, 0.1, 'sawtooth'); // Pitido de daño estándar
     }
 }
 
-
+// REPARADO: Detiene en seco los fotogramas y obliga a pintar la alerta neón de reinicio
 function forzarFinPartidaInfeccion() {
     partidaEnCurso = false;
     gameOver = true;
+    
+    // Limpiamos los buffers de proyectiles para liberar al procesador de inmediato
     proyectilesAntivirus.length = 0;
     proyectilesGlitch.length = 0;
+    
     inyectarLogConsola("[ALERT]: CORE COLLAPSED. Malicious glitches corrupted 100% of memory.");
-    sonarTonoRetro(80, 0.4, 'sawtooth'); // Sonido grave de explosión/caída
+    sonarTonoRetro(80, 0.4, 'sawtooth'); // Tono grave retro de explosión
+    
+    // OBLIGAMOS A DIBUJAR: Forzamos al motor gráfico a pintar el cartel de error crítico al instante
+    dibujar();
 }
+
 
 function activarVictoriaSistema() {
     partidaEnCurso = false;
@@ -552,5 +566,4 @@ function buclePrincipalJuego() {
 // AUTO-RUN DE ARRANQUE INMUTABLE (SÓLO SE EJECUTA AL CARGAR LA PÁGINA)
 inicializarEjercitoBugs();
 buclePrincipalJuego(); // Encendemos el único motor eterno de animación del juego
-
 
