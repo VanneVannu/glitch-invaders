@@ -53,8 +53,12 @@ const jugadorTerminal = {
     alto: 25,
     velocidad: 5,
     ultimoDisparo: 0,
-    cadenciaFuego: 250 // Milisegundos mínimos entre ráfagas de antivirus
+    cadenciaFuego: 250,
+    // INYECTADO: Estados para la habilidad del escudo por eliminación
+    campoActivo: false,
+    tiempoCampo: 0
 };
+
 
 // Sincronizamos el High Score inicial en la marquesina superior
 document.getElementById('txt-high-score').innerText = highScoreGabinete.toString().padStart(5, '0');
@@ -205,6 +209,24 @@ function dibujar() {
     ctx.shadowColor = '#ff7700';
     // Dibujamos el chasis de la terminal
     ctx.fillRect(jugadorTerminal.x, jugadorTerminal.y, jugadorTerminal.ancho, jugadorTerminal.ancho * 0.2);
+    // INYECTADO: DIBUJAR CAMPO DE SEGURIDAD CIRCULAR ÁMBAR
+    if (jugadorTerminal.campoActivo) {
+        ctx.strokeStyle = '#ffaa00'; // Ámbar brillante
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ffaa00';
+        
+        ctx.beginPath();
+        // Dibujamos un arco circular rodeando por completo la terminal hacker
+        ctx.arc(
+            jugadorTerminal.x + jugadorTerminal.ancho / 2, 
+            jugadorTerminal.y + jugadorTerminal.alto / 2, 
+            jugadorTerminal.ancho * 0.7, 
+            Math.PI, 0 // Medio círculo superior protector
+        );
+        ctx.stroke();
+        ctx.shadowBlur = 0; // Apagamos blur para estabilizar
+    }
     // Pequeño relieve superior que simula el cañón de inyección de código
     ctx.fillRect(jugadorTerminal.x + jugadorTerminal.ancho / 2 - 6, jugadorTerminal.y - 6, 12, 6);
 
@@ -401,9 +423,15 @@ function activarVictoriaSistema() {
 
 // Escanea intersecciones geométricas entre tus bits binarios y las naves corruptas
 function procesarColisionesGeometricas() {
-    // CANDADO DE SEGURIDAD INDUSTRIAL: Evita cálculos sobre matrices vacías tras el Game Over
     if (!partidaEnCurso || gameOver || victoria) return;
 
+    // CONTROL DEL TEMPORIZADOR DEL ESCUDO
+    if (jugadorTerminal.campoActivo && Date.now() > jugadorTerminal.tiempoCampo) {
+        jugadorTerminal.campoActivo = false;
+        inyectarLogConsola("[SHIELD]: Safety shield depleted. Core exposed.");
+    }
+
+    // COLISIÓN 1: Tus ráfagas antivirus (Bits) impactan contra los Bugs Invasores
     for (let i = proyectilesAntivirus.length - 1; i >= 0; i--) {
         const p = proyectilesAntivirus[i];
         if (!p) continue;
@@ -414,14 +442,22 @@ function procesarColisionesGeometricas() {
             const bug = enemigos[j];
 
             if (bug.vivo && p.x >= bug.x && p.x <= bug.x + bug.ancho && p.y >= bug.y && p.y <= bug.y + bug.alto) {
-                bug.vivo = false;
-                proyectilesAntivirus.splice(i, 1);
+                
+                bug.vivo = false; 
+                proyectilesAntivirus.splice(i, 1); 
                 proyectilBorrado = true;
                 
                 puntuacionBugs += bug.puntos;
                 document.getElementById('txt-score-bugs').innerText = puntuacionBugs.toString().padStart(4, '0');
                 inyectarLogConsola(`[DELETED]: Bug ${bug.icono} purged. Recalculating memory sectors (+${bug.puntos} bytes).`);
                 
+                // MAGIA DE TU IDEA: ¡Activamos el campo de seguridad por 2500 milisegundos (2.5 segundos)!
+                if (!jugadorTerminal.campoActivo) {
+                    inyectarLogConsola("[SHIELD]: Security shield INITIALIZED. Core invulnerable.");
+                }
+                jugadorTerminal.campoActivo = true;
+                jugadorTerminal.tiempoCampo = Date.now() + 2500; // 2.5 segundos de duración
+
                 sonarTonoRetro(500, 0.05, 'square');
                 
                 if (puntuacionBugs > highScoreGabinete) {
@@ -429,25 +465,39 @@ function procesarColisionesGeometricas() {
                     localStorage.setItem('invaders_high_score', highScoreGabinete);
                     document.getElementById('txt-high-score').innerText = highScoreGabinete.toString().padStart(5, '0');
                 }
-                break;
+                break; 
             }
         }
         if (proyectilBorrado) continue;
     }
 
+    // COLISIÓN 2: Los disparos de glitch enemigo (!) impactan contra tu Terminal Hacker
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
         if (!p) continue;
 
-        if (p.x >= jugadorTerminal.x && p.x <= jugadorTerminal.x + jugadorTerminal.ancho &&
-            p.y >= jugadorTerminal.y && p.y <= jugadorTerminal.y + jugadorTerminal.alto) {
+        // Calculamos la colisión considerando el tamaño del domo si está activo o el chasis normal
+        let radioProteccion = jugadorTerminal.campoActivo ? jugadorTerminal.ancho * 0.7 : jugadorTerminal.ancho / 2;
+        let centroJugadorX = jugadorTerminal.x + jugadorTerminal.ancho / 2;
+
+        if (p.x >= centroJugadorX - radioProteccion && p.x <= centroJugadorX + radioProteccion &&
+            p.y >= jugadorTerminal.y - 10 && p.y <= jugadorTerminal.y + jugadorTerminal.alto) {
             
-            proyectilesGlitch.splice(i, 1);
-            modificarIntegridadMemoria(-15);
-            inyectarLogConsola("[WARNING]: Core impacted by external code injection. Shield integrity dropping.");
+            proyectilesGlitch.splice(i, 1); // El proyectil enemigo siempre se destruye al impactar
+            
+            // FILTRO DE TU IDEA: Si el escudo está activo, bloqueamos el daño por completo
+            if (jugadorTerminal.campoActivo) {
+                inyectarLogConsola("[ABSORBED]: Glitch laser deflected by security shield. 0% damage.");
+                sonarTonoRetro(700, 0.04, 'sine'); // Pitido agudo metálico de rebote
+            } else {
+                // Si no hay escudo, sufres el daño normal del 15%
+                modificarIntegridadMemoria(-15);
+                inyectarLogConsola("[WARNING]: Core impacted by external code injection. Shield integrity dropping.");
+            }
         }
     }
 }
+
 
 
 // OSCILADOR SYNTH RETRO DE 8 BITS EXCLUSIVO (Web Audio API)
