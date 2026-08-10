@@ -30,7 +30,9 @@ const CODIGOS_ANTIVIRUS = ["0", "1", "X", "{", "}", ";", "OK", "KRNL"];
 // PROYECTILES ENEMY (GLITCH DISPAROS)
 const proyectilesGlitch = [];
 const velocidadGlitchProyectil = 4;
-let cadenciaFuegoEnemigo = 0.015; // Probabilidad de que un bug dispare por fotograma
+// REPARADO: Bajamos la cadencia de fuego para que las naves no disparen ráfagas masivas injustas
+let cadenciaFuegoEnemigo = 0.008; // Antes era 0.015 (Dispararán la mitad de proyectiles)
+
 
 // REGISTRO DE TECLADO MULTI-BOTÓN
 const teclas = {};
@@ -343,10 +345,13 @@ function actualizar() {
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
         p.y += velocidadGlitchProyectil;
+        // Limpieza de memoria: si el virus toca el fondo, daña la integridad del sistema
         if (p.y > canvas.height) {
             proyectilesGlitch.splice(i, 1);
-            modificarIntegridadMemoria(-5); 
+            // REPARADO: Dejar pasar un disparo al suelo ahora solo quita 1% en lugar de 5%
+            modificarIntegridadMemoria(-1); 
         }
+
     }
 
     // 4. MOTOR DE AVANCE DEL EJÉRCITO DE BUGS INFECTADOS
@@ -431,13 +436,11 @@ function activarVictoriaSistema() {
 function procesarColisionesGeometricas() {
     if (!partidaEnCurso || gameOver || victoria) return;
 
-    // CONTROL DEL TEMPORIZADOR DEL ESCUDO
     if (jugadorTerminal.campoActivo && Date.now() > jugadorTerminal.tiempoCampo) {
         jugadorTerminal.campoActivo = false;
         inyectarLogConsola("[SHIELD]: Safety shield depleted. Core exposed.");
     }
 
-    // COLISIÓN 1: Tus ráfagas antivirus (Bits) impactan contra los Bugs Invasores
     for (let i = proyectilesAntivirus.length - 1; i >= 0; i--) {
         const p = proyectilesAntivirus[i];
         if (!p) continue;
@@ -448,7 +451,6 @@ function procesarColisionesGeometricas() {
             const bug = enemigos[j];
 
             if (bug.vivo && p.x >= bug.x && p.x <= bug.x + bug.ancho && p.y >= bug.y && p.y <= bug.y + bug.alto) {
-                
                 bug.vivo = false; 
                 proyectilesAntivirus.splice(i, 1); 
                 proyectilBorrado = true;
@@ -457,12 +459,11 @@ function procesarColisionesGeometricas() {
                 document.getElementById('txt-score-bugs').innerText = puntuacionBugs.toString().padStart(4, '0');
                 inyectarLogConsola(`[DELETED]: Bug ${bug.icono} purged. Recalculating memory sectors (+${bug.puntos} bytes).`);
                 
-                // MAGIA DE TU IDEA: ¡Activamos el campo de seguridad por 2500 milisegundos (2.5 segundos)!
                 if (!jugadorTerminal.campoActivo) {
                     inyectarLogConsola("[SHIELD]: Security shield INITIALIZED. Core invulnerable.");
                 }
                 jugadorTerminal.campoActivo = true;
-                jugadorTerminal.tiempoCampo = Date.now() + 2500; // 2.5 segundos de duración
+                jugadorTerminal.tiempoCampo = Date.now() + 2500; 
 
                 sonarTonoRetro(500, 0.05, 'square');
                 
@@ -477,28 +478,25 @@ function procesarColisionesGeometricas() {
         if (proyectilBorrado) continue;
     }
 
-    // COLISIÓN 2: Los disparos de glitch enemigo (!) impactan contra tu Terminal Hacker
     for (let i = proyectilesGlitch.length - 1; i >= 0; i--) {
         const p = proyectilesGlitch[i];
         if (!p) continue;
 
-        // Calculamos la colisión considerando el tamaño del domo si está activo o el chasis normal
         let radioProteccion = jugadorTerminal.campoActivo ? jugadorTerminal.ancho * 0.7 : jugadorTerminal.ancho / 2;
         let centroJugadorX = jugadorTerminal.x + jugadorTerminal.ancho / 2;
 
         if (p.x >= centroJugadorX - radioProteccion && p.x <= centroJugadorX + radioProteccion &&
             p.y >= jugadorTerminal.y - 10 && p.y <= jugadorTerminal.y + jugadorTerminal.alto) {
             
-            proyectilesGlitch.splice(i, 1); // El proyectil enemigo siempre se destruye al impactar
+            proyectilesGlitch.splice(i, 1); 
             
-            // FILTRO DE TU IDEA: Si el escudo está activo, bloqueamos el daño por completo
             if (jugadorTerminal.campoActivo) {
                 inyectarLogConsola("[ABSORBED]: Glitch laser deflected by security shield. 0% damage.");
-                sonarTonoRetro(700, 0.04, 'sine'); // Pitido agudo metálico de rebote
+                sonarTonoRetro(700, 0.04, 'sine'); 
             } else {
-                // Si no hay escudo, sufres el daño normal del 15%
-                modificarIntegridadMemoria(-15);
-                inyectarLogConsola("[WARNING]: Core impacted by external code injection. Shield integrity dropping.");
+                // REPARADO: El daño directo ahora solo resta 5% en lugar de 15%
+                modificarIntegridadMemoria(-5);
+                inyectarLogConsola("[WARNING]: Core impacted by external code injection. Shield integrity dropping (-5%).");
             }
         }
     }
@@ -552,4 +550,5 @@ function buclePrincipalJuego() {
 // AUTO-RUN DE ARRANQUE INMUTABLE (SÓLO SE EJECUTA AL CARGAR LA PÁGINA)
 inicializarEjercitoBugs();
 buclePrincipalJuego(); // Encendemos el único motor eterno de animación del juego
+
 
